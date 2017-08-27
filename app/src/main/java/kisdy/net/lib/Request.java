@@ -1,6 +1,7 @@
 package kisdy.net.lib;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -12,7 +13,10 @@ import java.util.Map;
  * Created by Administrator on 2017/8/25.
  */
 
-public abstract class Request<T>  implements  Comparable<Request<T>> {
+public abstract class Request<T> implements Comparable<Request<T>> {
+
+    private final static String TAG = "Request";
+
     /**
      * http请求方法枚举,这里我们只有GET, POST, PUT, DELETE四种
      *
@@ -24,7 +28,9 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
         PUT("PUT"),
         DELETE("DELETE");
 
-        /** http request type */
+        /**
+         * http request type
+         */
         private String mHttpMethod = "";
 
         private HttpMethod(String method) {
@@ -72,7 +78,9 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
      */
     protected boolean isCancel = false;
 
-    /** 该请求是否应该缓存 */
+    /**
+     * 该请求是否应该缓存
+     */
     private boolean mShouldCache = true;
     /**
      * 请求的url
@@ -90,14 +98,14 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
     /**
      * 请求参数
      */
-    private Map<String, String> mBodyParams = new HashMap<String, String>();
+    private Map<String, String> mRequestParams = new HashMap<String, String>();
 
     /**
      * @param url
      * @param listener
      */
     public Request(String url, RequestListener<T> listener) {
-       this(HttpMethod.GET,url,listener);
+        this(HttpMethod.GET, url, listener);
     }
 
 
@@ -111,7 +119,6 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
         mUrl = url;
         mRequestListener = listener;
     }
-
 
 
     /**
@@ -134,14 +141,13 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
         if (mRequestListener != null) {
             int stCode = response != null ? response.getStatusCode() : -1;
             String msg = response != null ? response.getMessage() : "unkown error";
-            mRequestListener.onComplete(mSerialNum,stCode, result, msg);
+            mRequestListener.onComplete(mSerialNum, stCode, result, msg);
         }
     }
 
     public String getUrl() {
         return mUrl;
     }
-
 
 
     public int getSerialNumber() {
@@ -177,9 +183,8 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
     }
 
     public Map<String, String> getParams() {
-        return mBodyParams;
+        return mRequestParams;
     }
-
 
     public void cancel() {
         isCancel = true;
@@ -193,10 +198,8 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
         return mUrl.startsWith("https");
     }
 
-
     /**
      * 返回POST或者PUT请求时的Body参数字节数组
-     *
      */
     public byte[] getBody() {
         Map<String, String> params = getParams();
@@ -207,9 +210,24 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
     }
 
     /**
-     * 将参数转换为Url编码的参数串
+     * 将参数拼接到请求URL后面
      */
-    private byte[] encodeParameters(Map<String, String> params, String paramsEncoding) {
+    public void joinUrlParameters() {
+        StringBuilder sbUrl = new StringBuilder();
+        sbUrl.append(mUrl);
+        if (!mUrl.contains("?")) {          //mUrl不包含？
+            sbUrl.append("?").append(joinParameters(getParams(), getParamsEncoding()));
+        } else if (mUrl.contains("?") && !mUrl.endsWith("?")) {
+            sbUrl.append("&").append(joinParameters(getParams(), getParamsEncoding()));
+        } else {                             //以?号结尾
+            sbUrl.append(joinParameters(getParams(), getParamsEncoding()));
+        }
+        mUrl = sbUrl.toString();
+    }
+
+    private String joinParameters(Map<String, String> params, String paramsEncoding) {
+        if(params.entrySet().isEmpty())
+            return "";
         StringBuilder encodedParams = new StringBuilder();
         try {
             for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -218,7 +236,20 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
                 encodedParams.append(URLEncoder.encode(entry.getValue(), paramsEncoding));
                 encodedParams.append('&');
             }
-            return encodedParams.toString().getBytes(paramsEncoding);
+            String strParams = encodedParams.substring(0, encodedParams.length() - 1);  //去掉最后个&号
+            return strParams;
+        } catch (UnsupportedEncodingException uee) {
+            throw new RuntimeException("Encoding not supported: " + paramsEncoding, uee);
+        }
+    }
+
+    /**
+     * 将参数转换为Url编码的参数串
+     */
+    private byte[] encodeParameters(Map<String, String> params, String paramsEncoding) {
+        try {
+            String strParams = joinParameters(params, paramsEncoding);
+            return strParams.getBytes(paramsEncoding);
         } catch (UnsupportedEncodingException uee) {
             throw new RuntimeException("Encoding not supported: " + paramsEncoding, uee);
         }
@@ -234,11 +265,12 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
      * 请求Listener
      */
     protected RequestListener<T> mRequestListener;
+
     /**
      * 网络请求Listener,会被执行在UI线程
      *
-     * @author mrsimple
      * @param <T> 请求的response类型
+     * @author mrsimple
      */
     public static interface RequestListener<T> {
         /**
@@ -246,7 +278,7 @@ public abstract class Request<T>  implements  Comparable<Request<T>> {
          *
          * @param response
          */
-        public void onComplete(int serialNum,int statusCode, T response, String errMsg);
+        public void onComplete(int serialNum, int statusCode, T response, String errMsg);
     }
 
 }

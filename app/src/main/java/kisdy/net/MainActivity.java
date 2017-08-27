@@ -22,6 +22,10 @@ public class MainActivity extends AppCompatActivity {
 
         String url = "http://www.qq.com/";
         Request request = new StringRequest(url, listener);
+        request.getParams().put("user","admin");
+        request.getParams().put("pwd","123456");
+        request.getParams().put("age","19");
+
         queue.addRequest(request);
 
         url = "https://www.baidu.com/";

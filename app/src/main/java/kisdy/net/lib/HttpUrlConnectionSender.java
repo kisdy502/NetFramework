@@ -61,6 +61,7 @@ public class HttpUrlConnectionSender implements IHttpSender {
             urlConnection = createUrlConnection(request.getUrl());   // 构建HttpURLConnection
             setRequestHeaders(urlConnection, request);              // 设置headers
             setRequestParams(urlConnection, request);                // 设置Body参数
+            Log.d(TAG,request.getUrl());
             configHttps(request);                     // https 配置
             return fetchResponse(urlConnection);
         } catch (Exception e) {
@@ -106,17 +107,21 @@ public class HttpUrlConnectionSender implements IHttpSender {
             throws ProtocolException, IOException {
         Request.HttpMethod method = request.getHttpMethod();
         connection.setRequestMethod(method.toString());
-        // add params
-        byte[] body = request.getBody();
-        if (body != null) {
-            // enable output
-            connection.setDoOutput(true);
-            // set content type
-            connection.addRequestProperty(Request.HEADER_CONTENT_TYPE, request.getBodyContentType());
-            // write params data to connection
-            DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream());
-            dataOutputStream.write(body);
-            dataOutputStream.close();
+        if(method==Request.HttpMethod.GET ){
+            request.joinUrlParameters();
+        } else if(method==Request.HttpMethod.POST||method==Request.HttpMethod.PUT) {
+            // add params
+            byte[] body = request.getBody();
+            if (body != null) {
+                // enable output
+                connection.setDoOutput(true);
+                // set content type
+                connection.addRequestProperty(Request.HEADER_CONTENT_TYPE, request.getBodyContentType());
+                // write params data to connection
+                DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream());
+                dataOutputStream.write(body);
+                dataOutputStream.close();
+            }
         }
     }
 
@@ -145,7 +150,6 @@ public class HttpUrlConnectionSender implements IHttpSender {
             inputStream = connection.getErrorStream();
         }
         response.setResponseStream(inputStream);
-
         addHeadersToResponse(response, connection);
         return response;
     }
