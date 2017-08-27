@@ -131,4 +131,10 @@ public class Response {
                 .append(contentEncoding).append("\n");
         return sb.toString();
     }
+
+
+
+    private void cacleContentEncoding(){
+
+    }
 }
