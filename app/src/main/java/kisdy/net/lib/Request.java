@@ -2,7 +2,6 @@ package kisdy.net.lib;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;

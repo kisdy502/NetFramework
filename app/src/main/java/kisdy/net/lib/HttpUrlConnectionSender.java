@@ -26,7 +26,6 @@ package kisdy.net.lib;
 
 import android.support.v4.util.ArrayMap;
 import android.util.Log;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,6 +47,7 @@ import javax.net.ssl.SSLSocketFactory;
  * @author mrsimple
  */
 public class HttpUrlConnectionSender implements IHttpSender {
+
     public final static String TAG="HttpUrlConnectionSender";
     /**
      * 配置Https
@@ -92,7 +92,6 @@ public class HttpUrlConnectionSender implements IHttpSender {
                 HttpsURLConnection.setDefaultSSLSocketFactory(sslFactory);
                 HttpsURLConnection.setDefaultHostnameVerifier(mConfig.getHostnameVerifier());
             }
-
         }
     }
 

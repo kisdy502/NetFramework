@@ -64,8 +64,8 @@ class ResponseDelivery implements Executor {
     }
 
     @Override
-    public void execute(Runnable command) {
-        mResponseHandler.post(command);
+    public void execute(Runnable runnable) {
+        mResponseHandler.post(runnable);
     }
 
 }
