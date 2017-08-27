@@ -1,10 +1,13 @@
 package kisdy.net.lib;
 
 import android.support.v4.util.ArrayMap;
+import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 /**
  * 响应类
@@ -13,10 +16,14 @@ import java.io.InputStream;
 
 public class Response {
 
-    public Response(int statuscode,String msg){
-        statusCode=statuscode;
-        message=msg;
-        hreaders=new ArrayMap<String,String>();
+    private final static String TAG = "Response";
+
+    private final static String DEFAULT_ENCODING = "UTF-8";
+
+    public Response(int statuscode, String msg) {
+        statusCode = statuscode;
+        message = msg;
+        hreaders = new ArrayMap<String, String>();
     }
 
     private int statusCode;
@@ -40,24 +47,35 @@ public class Response {
     }
 
     public void setContentType(String contentType) {
-        this.contentType = contentType;
+        if (!TextUtils.isEmpty(contentType))
+            this.contentType = contentType;
     }
 
-    public long getContentLength(){
+    public long getContentLength() {
         return contentLength;
     }
-    public void setContentLength(long length){
-        contentLength=length;
+
+    public void setContentLength(long length) {
+        contentLength = length;
     }
 
-    public String getContentEncoding(){
-        return contentEncoding;
+    public String getContentEncoding() {
+        if (!TextUtils.isEmpty(contentEncoding))
+            return contentEncoding;
+        else{
+            String encode= getEncodingFromContentType(contentType);
+            if (!TextUtils.isEmpty(encode)){
+                return encode;
+            }else{
+               return DEFAULT_ENCODING;
+            }
+        }
     }
 
     public void setContentEncoding(String encoding) {
-        this.contentEncoding = encoding;
+        if (!TextUtils.isEmpty(encoding))
+            this.contentEncoding = encoding;
     }
-
 
     public InputStream getResponseStream() {
         return responseStream;
@@ -65,7 +83,7 @@ public class Response {
 
     public void setResponseStream(InputStream responseStream) {
         this.responseStream = responseStream;
-        rawData=toByteArray(responseStream);
+        rawData = toByteArray(responseStream);
     }
 
     private InputStream responseStream;
@@ -87,34 +105,34 @@ public class Response {
         this.hreaders = hreaders;
     }
 
-    private ArrayMap<String,String> hreaders;
+    private ArrayMap<String, String> hreaders;
 
 
-    public  byte[] toByteArray(final InputStream instream) {
+    public byte[] toByteArray(final InputStream instream) {
         if (instream == null) {
             return null;
         }
-        if (contentLength > 1024*1024*256) {
+        if (contentLength > 1024 * 1024 * 256) {
             throw new IllegalArgumentException("HTTP entity too large to be buffered in memory");
         }
-        int i = (int)contentLength;
+        int i = (int) contentLength;
         if (i < 0) {
             i = 4096;
         }
-        ByteArrayOutputStream  buffer = new ByteArrayOutputStream(i);
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream(i);
         try {
             byte[] tmp = new byte[4096];
             int l;
-            while((l = instream.read(tmp)) != -1) {
+            while ((l = instream.read(tmp)) != -1) {
                 buffer.write(tmp, 0, l);
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             return new byte[0];
-        }finally {
+        } finally {
             try {
                 instream.close();
-            }catch (IOException ex){
+            } catch (IOException ex) {
 
             }
         }
@@ -123,18 +141,30 @@ public class Response {
 
     @Override
     public String toString() {
-        StringBuffer sb=new StringBuffer();
-        sb.append(statusCode).append("\n")
-                .append(message).append("\n")
-                .append(contentLength).append("\n")
-                .append(contentType).append("\n")
-                .append(contentEncoding).append("\n");
+        StringBuffer sb = new StringBuffer();
+        sb.append("statusCode:").append(statusCode).append("\n")
+                .append("message:").append(message).append("\n")
+                .append("contentLength:").append(contentLength).append("\n")
+                .append("contentType:").append(contentType).append("\n")
+                .append("contentEncoding:").append(contentEncoding).append("\n");
+        if (hreaders != null && hreaders.size() > 0) {
+            for (Map.Entry<String, String> entry : hreaders.entrySet()) {
+                sb.append(entry.getKey()).append(":").append(entry.getValue()).append("\n");
+            }
+        }
         return sb.toString();
     }
 
 
-
-    private void cacleContentEncoding(){
+    private String getEncodingFromContentType(String contentype){
+        if(TextUtils.isEmpty(contentype))
+            return "";
+        int index=contentype.indexOf('=');
+        if(index>0){
+            return contentype.substring(index+1,contentype.length());
+        }
+        return "";
 
     }
+
 }

@@ -25,10 +25,12 @@
 package kisdy.net.lib;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.io.UnsupportedEncodingException;
 
 public class StringRequest extends Request<String> {
+    private final static String TAG="StringRequest";
 
     public StringRequest(String url, RequestListener<String> listener) {
         super(url, listener);
@@ -41,7 +43,9 @@ public class StringRequest extends Request<String> {
     @Override
     public String parseResponse(Response response) {
         try {
-            return new String(response.getRawData(),"GB2312");
+            String contentEncoding=response.getContentEncoding();
+            Log.i(TAG,"contentEncoding:"+contentEncoding);
+            return new String(response.getRawData(),response.getContentEncoding());
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

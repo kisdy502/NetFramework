@@ -17,21 +17,24 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        RequestQueue queue=new RequestQueue();
+        RequestQueue queue = new RequestQueue();
         queue.start();
 
-        String url="https://www.baidu.com";
-        Request request=new StringRequest(url,listener);
-
+        String url = "http://www.qq.com/";
+        Request request = new StringRequest(url, listener);
         queue.addRequest(request);
-        queue.addRequest(new StringRequest("http://www.qq.com/",listener));
+
+        url = "https://www.baidu.com/";
+        request = new StringRequest(url, listener);
+        queue.addRequest(request);
+
     }
 
 
-    private Request.RequestListener<String> listener=new Request.RequestListener<String>(){
+    private Request.RequestListener<String> listener = new Request.RequestListener<String>() {
         @Override
-        public void onComplete(int serialNum,int stCode, String response, String errMsg) {
-                Log.i(TAG,"serialNum"+serialNum+",response"+response);
+        public void onComplete(int serialNum, int stCode, String response, String errMsg) {
+            Log.i(TAG, "serialNum" + serialNum + ",response" + response);
         }
     };
 }
